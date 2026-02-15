@@ -67,3 +67,6 @@ frontend/out/
 
 # Environment
 .env.example
+
+# Local Netlify folder
+.netlify

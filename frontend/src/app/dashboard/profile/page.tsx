@@ -139,7 +139,7 @@ export default function ProfilePage() {
               )}
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <Calendar className="w-4 h-4" />
-                Joined {new Date(user.createdAt || Date.now()).toLocaleDateString()}
+                Joined {new Date(profile.createdAt || Date.now()).toLocaleDateString()}
               </div>
             </div>
           </div>

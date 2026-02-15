@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  VERIFY_EMAIL
+  CHANGE_PASSWORD
+  RESET_PASSWORD
+  ROLE_CHANGE
+}
+
+// Models
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  firstName       String
+  lastName        String
+  avatar          String?
+  phone           String?
+  role            UserRole  @default(USER)
+  status          UserStatus @default(PENDING)
+  isEmailVerified Boolean   @default(false)
+  emailVerifyToken String?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+  refreshToken    String?
+  lastLogin       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  auditLogs       AuditLog[]
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("sessions")
+}
+
+model AuditLog {
+  id         String     @id @default(uuid())
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     AuditAction
+  entity     String
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime   @default(now())
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model EmailTemplate {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  subject   String
+  body      String   @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_templates")
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string")
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
